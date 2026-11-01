@@ -20,6 +20,7 @@ function run(): void {
   assert.deepEqual(config.shortcuts, {
     sendTranscriptKey: "f8",
     insertTranscriptKey: "f7",
+    pausePlaybackKey: "alt+p",
   });
   assert.deepEqual(config.piper, {
     binaryPath: "/opt/piper/bin/piper",

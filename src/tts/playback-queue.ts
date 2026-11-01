@@ -26,7 +26,11 @@ export type PlaybackQueue = {
   drain(): Promise<void>;
   pendingCount(): number;
   stop(): Promise<boolean>;
+  pause(): Promise<boolean>;
+  resume(): Promise<boolean>;
+  togglePause(): Promise<"paused" | "resumed" | "idle">;
   isPlaying(): boolean;
+  isPaused(): boolean;
   isMuted(): boolean;
 };
 
@@ -38,6 +42,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
   let muteStopping = false;
   let stopping = false;
   let activePlayback = false;
+  let paused = false;
   let currentAudioPath: string | undefined;
 
   const resolvePiper = async (): Promise<PiperClientOptions | undefined> => {
@@ -105,6 +110,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
           status("playing", pathBase(audioPath));
           await player.play(audioPath);
           activePlayback = false;
+          paused = false;
           currentAudioPath = undefined;
 
           if (stopping || muteStopping) {
@@ -126,6 +132,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
           status("success", pathBase(audioPath));
         } catch (error) {
           activePlayback = false;
+          paused = false;
           currentAudioPath = undefined;
           jobState = stopping || muteStopping ? "interrupted" : "failed";
           if (stopping || muteStopping) {
@@ -145,6 +152,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
       busy = false;
       currentAudioPath = undefined;
       activePlayback = false;
+      paused = false;
       const shouldRestart = queue.length > 0 && !isBlocked();
       stopping = false;
       if (shouldRestart) {
@@ -182,6 +190,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
         }
         status("stopped", currentAudioPath ? pathBase(currentAudioPath) : undefined);
         activePlayback = false;
+        paused = false;
       }
       if (!muted) {
         await process();
@@ -199,6 +208,30 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
     isMuted(): boolean {
       return muted;
     },
+    isPaused(): boolean {
+      return paused;
+    },
+    async pause(): Promise<boolean> {
+      if (!activePlayback || paused || !player.pause) return false;
+      const didPause = await player.pause();
+      if (didPause && activePlayback) {
+        paused = true;
+        status("paused", currentAudioPath ? pathBase(currentAudioPath) : undefined);
+      }
+      return didPause;
+    },
+    async resume(): Promise<boolean> {
+      if (!activePlayback || !paused || !player.resume) return false;
+      paused = false;
+      status("playing", currentAudioPath ? pathBase(currentAudioPath) : undefined);
+      return await player.resume();
+    },
+    async togglePause(): Promise<"paused" | "resumed" | "idle"> {
+      if (paused) {
+        return (await this.resume()) ? "resumed" : "idle";
+      }
+      return (await this.pause()) ? "paused" : "idle";
+    },
     async stop(): Promise<boolean> {
       if (!activePlayback && !busy) {
         return false;
@@ -207,6 +240,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
       stopping = true;
       queue.length = 0;
       activePlayback = false;
+      paused = false;
       status("stopped", currentAudioPath ? pathBase(currentAudioPath) : undefined);
       currentAudioPath = undefined;
       if (busy) {
