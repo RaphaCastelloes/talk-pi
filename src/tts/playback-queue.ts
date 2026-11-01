@@ -27,6 +27,8 @@ export type PlaybackQueue = {
   pendingCount(): number;
   stop(): Promise<boolean>;
   isPlaying(): boolean;
+  isPaused(): boolean;
+  togglePause(): boolean;
   isMuted(): boolean;
 };
 
@@ -38,6 +40,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
   let muteStopping = false;
   let stopping = false;
   let activePlayback = false;
+  let paused = false;
   let currentAudioPath: string | undefined;
 
   const resolvePiper = async (): Promise<PiperClientOptions | undefined> => {
@@ -105,6 +108,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
           status("playing", pathBase(audioPath));
           await player.play(audioPath);
           activePlayback = false;
+          paused = false;
           currentAudioPath = undefined;
 
           if (stopping || muteStopping) {
@@ -126,6 +130,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
           status("success", pathBase(audioPath));
         } catch (error) {
           activePlayback = false;
+          paused = false;
           currentAudioPath = undefined;
           jobState = stopping || muteStopping ? "interrupted" : "failed";
           if (stopping || muteStopping) {
@@ -145,6 +150,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
       busy = false;
       currentAudioPath = undefined;
       activePlayback = false;
+      paused = false;
       const shouldRestart = queue.length > 0 && !isBlocked();
       stopping = false;
       if (shouldRestart) {
@@ -182,6 +188,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
         }
         status("stopped", currentAudioPath ? pathBase(currentAudioPath) : undefined);
         activePlayback = false;
+        paused = false;
       }
       if (!muted) {
         await process();
@@ -196,6 +203,25 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
     isPlaying(): boolean {
       return activePlayback;
     },
+    isPaused(): boolean {
+      return paused;
+    },
+    togglePause(): boolean {
+      if (!activePlayback || stopping || muteStopping) return false;
+      try {
+        if (paused) {
+          player.resume();
+        } else {
+          player.pause();
+        }
+        paused = !paused;
+        status(paused ? "paused" : "playing", currentAudioPath ? pathBase(currentAudioPath) : undefined);
+        return true;
+      } catch (error) {
+        notify(error instanceof Error ? error.message : "Unable to control audio playback", "error");
+        return false;
+      }
+    },
     isMuted(): boolean {
       return muted;
     },
@@ -207,6 +233,7 @@ export function createPlaybackQueue(options: PlaybackQueueOptions = {}): Playbac
       stopping = true;
       queue.length = 0;
       activePlayback = false;
+      paused = false;
       status("stopped", currentAudioPath ? pathBase(currentAudioPath) : undefined);
       currentAudioPath = undefined;
       if (busy) {

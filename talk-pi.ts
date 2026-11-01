@@ -101,6 +101,7 @@ export default function (pi: ExtensionAPI) {
     speechStatus,
     muted: muteState.isMuted(),
     playing: playbackQueue.isPlaying(),
+    paused: playbackQueue.isPaused(),
   });
 
   const getMenuStatusText = (): string => {
@@ -209,6 +210,11 @@ export default function (pi: ExtensionAPI) {
 
           if (matchesKey(data, "escape") && playbackQueue.isPlaying()) {
             void playbackQueue.stop().then(() => syncStatus(activeCtx ?? ctx));
+            return;
+          }
+
+          if (matchesKey(data, "alt+p") && playbackQueue.isPlaying()) {
+            playbackQueue.togglePause();
             return;
           }
 

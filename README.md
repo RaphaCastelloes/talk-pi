@@ -59,6 +59,8 @@ Talk-Pi prefers `~/.pi/agent/extensions/talk-pi` when available and falls back t
 4. Wait for Whisper transcription.
 5. Listen to Piper reply, or send/insert transcript as needed.
 
+Press `Alt+P` while a reply is playing to pause it; press `Alt+P` again to resume from the same position. `Esc` stops the reply, including while paused. During playback, this takes priority over Pi's `Alt+P` model-cycling shortcut on Windows and WSL.
+
 ## Platform notes
 
 - Windows, Linux, and macOS use same setup.
@@ -72,4 +74,3 @@ Talk-Pi prefers `~/.pi/agent/extensions/talk-pi` when available and falls back t
 ```bash
 npm publish --access public
 ```
-
