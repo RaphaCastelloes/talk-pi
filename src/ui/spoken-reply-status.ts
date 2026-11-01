@@ -3,6 +3,7 @@ export type SpokenReplyStatusKind =
   | "synthesizing"
   | "ready"
   | "playing"
+  | "paused"
   | "deferred"
   | "success"
   | "failure"
@@ -18,6 +19,8 @@ export function formatSpokenReplyStatus(kind: SpokenReplyStatusKind, detail?: st
       return `Thinking${detail ? `: ${detail}` : ""}`;
     case "playing":
       return `Talking${detail ? `: ${detail}` : ""}`;
+    case "paused":
+      return `Paused${detail ? `: ${detail}` : ""}`;
     case "deferred":
       return `Muted${detail ? `: ${detail}` : ""}`;
     case "success":

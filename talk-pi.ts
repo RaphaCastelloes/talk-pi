@@ -101,13 +101,14 @@ export default function (pi: ExtensionAPI) {
     speechStatus,
     muted: muteState.isMuted(),
     playing: playbackQueue.isPlaying(),
+    paused: playbackQueue.isPaused(),
   });
 
   const getMenuStatusText = (): string => {
     const base = getFooterStatusText();
     const modelLabel = piperSelection?.activeModel?.label ?? path.basename(config.piper.modelPath);
     const outputLabel = piperSelection?.outputLabel ?? "Portuguese";
-    return `${base} | Voice Language: ${outputLabel} | Piper: ${modelLabel} | ${shortcutConfig.sendTranscriptKey.toUpperCase()} sends directly | ${shortcutConfig.insertTranscriptKey.toUpperCase()} inserts / toggles voice`;
+    return `${base} | Voice Language: ${outputLabel} | Piper: ${modelLabel} | ${shortcutConfig.sendTranscriptKey.toUpperCase()} sends directly | ${shortcutConfig.insertTranscriptKey.toUpperCase()} inserts / toggles voice | ${shortcutConfig.pausePlaybackKey.toUpperCase()} pauses / resumes playback`;
   };
 
   const syncStatus = (ctx: ExtensionContext) => {
@@ -204,6 +205,11 @@ export default function (pi: ExtensionAPI) {
 
         handleInput(data: string): void {
           if (isKeyRelease(data) || data.includes(":2")) {
+            return;
+          }
+
+          if (matchesKey(data, shortcutConfig.pausePlaybackKey) && playbackQueue.isPlaying()) {
+            void playbackQueue.togglePause().then(() => syncStatus(activeCtx ?? ctx));
             return;
           }
 

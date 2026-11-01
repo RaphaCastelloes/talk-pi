@@ -42,6 +42,7 @@ Talk-Pi prefers `~/.pi/agent/extensions/talk-pi` when available and falls back t
 | --- | --- |
 | `TALK_PI_SEND_TRANSCRIPT_KEY` | `F9` |
 | `TALK_PI_INSERT_TRANSCRIPT_KEY` | `F10` |
+| `TALK_PI_PAUSE_PLAYBACK_KEY` | `Alt+P` (pause / resume spoken reply) |
 | `TALK_PI_TOOLS_DIR` | `./tools` (override) |
 | `TALK_PI_PIPER_BIN` | `./tools/piper/piper` |
 | `TALK_PI_PIPER_MODEL_PATH` | `./tools/piper/models/pt_BR-faber-medium.onnx` |

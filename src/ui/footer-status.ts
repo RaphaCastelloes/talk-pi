@@ -4,6 +4,7 @@ export type FooterStatusKind =
   | "transcribing"
   | "thinking"
   | "talking"
+  | "paused"
   | "muted"
   | "error"
   | "no-speech";
@@ -14,6 +15,7 @@ export type FooterStatusState = {
   speechStatus?: string;
   muted?: boolean;
   playing?: boolean;
+  paused?: boolean;
 };
 
 type FooterStatusMeta = {
@@ -27,6 +29,7 @@ const STATUS_META: Record<FooterStatusKind, FooterStatusMeta> = {
   transcribing: { label: "Transcribing", emoji: "⏳" },
   thinking: { label: "Thinking", emoji: "🤔" },
   talking: { label: "Talking", emoji: "🗣️" },
+  paused: { label: "Paused", emoji: "⏸" },
   muted: { label: "Muted", emoji: "🔇" },
   error: { label: "Error", emoji: "⚠️" },
   "no-speech": { label: "No speech detected", emoji: "👂" },
@@ -40,6 +43,10 @@ export function resolveFooterStatus(state: FooterStatusState): FooterStatusKind 
   const voiceStatus = lower(state.voiceStatus);
   const voiceMessage = lower(state.voiceMessage);
   const speechStatus = lower(state.speechStatus);
+
+  if (state.paused) {
+    return "paused";
+  }
 
   if (state.playing || speechStatus.includes("playing")) {
     return "talking";
